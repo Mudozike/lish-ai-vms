@@ -1,0 +1,128 @@
+// This is your database connection
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------- USER (Lish AI Labs Internal Users - Hosts, Security, Admin) ----------
+model User {
+  id            String   @id @default(cuid())
+  clerkId       String   @unique
+  email         String   @unique
+  name          String
+  role          String   // "HOST", "SECURITY", "ADMIN"
+  department    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ---------- VISITOR (Anyone entering Lish AI Labs) ----------
+model Visitor {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String   @unique
+  phone         String
+  company       String?  // Optional: e.g., "Simba AI", "British Council"
+  visitorType   String   // "INVESTOR", "PARTNER", "TRAINEE", "ANNOTATOR", "APPLICANT", "VENDOR", "ATTACHEE"
+  photoUrl      String?  // For security verification
+  isBlacklisted Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  visits        Visit[]  // One visitor can have many visits
+  blacklistEntry Blacklist?
+}
+
+// ---------- BLACKLIST (Banned Visitors) ----------
+model Blacklist {
+  id          String   @id @default(cuid())
+  visitorId   String   @unique
+  reason      String
+  addedBy     String   // clerkId of admin who added
+  createdAt   DateTime @default(now())
+  
+  visitor     Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+}
+
+// ---------- HOST (Lish AI Labs Staff/Team) ----------
+model Host {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  email         String   @unique
+  name          String
+  department    String   // "Executive", "Partnerships", "Training", "Operations", "HR", "Admin"
+  role          String   // "Director", "Manager", "Coordinator", "Admin"
+  requiresEscort Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  visits        Visit[]  // One host can have many visits
+
+}
+
+// ---------- VISIT (Each time someone enters Lish AI Labs) ----------
+model Visit {
+  id              String   @id @default(cuid())
+  visitorId       String
+  hostId          String
+  purpose         String   // "Funding Discussion", "Partnership Meeting", "Training Enrollment", "Data Annotation Work", "Interview", "Delivery", "Internship Orientation"
+  expectedArrival DateTime
+  actualCheckIn   DateTime?
+  actualCheckOut  DateTime?
+  status          String   @default("PENDING") // PENDING, APPROVED, CHECKED_IN, CHECKED_OUT, OVERDUE
+  allowedZone     String   @default("Lobby")   // "Lobby", "ExecutiveOffice", "EventHall", "MeetingRoom", "TrainingRoom", "AnnotationLab", "HROffice", "Warehouse"
+  notes           String?
+  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relationships
+  visitor         Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  host            Host     @relation(fields: [hostId], references: [id])
+  badge           Badge?   // One visit has one badge
+  movements       MovementLog[] // One visit has many movement logs
+  
+  @@index([visitorId])
+  @@index([hostId])
+  @@index([status])
+  @@index([expectedArrival])
+}
+
+// ---------- BADGE (QR Pass for each visit) ----------
+model Badge {
+  id          String   @id @default(cuid())
+  visitId     String   @unique  // One badge per visit
+  qrCode      String   @unique  // The actual QR text (Visit ID)
+  qrImageUrl  String?  // URL to the generated QR image
+  issuedAt    DateTime @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  
+  @@index([visitId])
+}
+
+// ---------- MOVEMENT LOG (Tracking within Lish AI Labs) ----------
+model MovementLog {
+  id          String   @id @default(cuid())
+  visitId     String
+  zone        String   // "Lobby", "ExecutiveOffice", "EventHall", "TrainingRoom", "AnnotationLab"
+  eventType   String   // "ENTRY", "EXIT", "BREACH"
+  timestamp   DateTime @default(now())
+  
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  
+  @@index([visitId])
+  @@index([timestamp])
+}
+
+
+
