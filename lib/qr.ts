@@ -12,7 +12,7 @@ export async function generateQRCode(text: string): Promise<string> {
       margin: 2,
       width: 300,
       color: {
-        dark: '#1e1b4b', // Deep indigo
+        dark: '#1e1b4b', // Deep indigo elements
         light: '#ffffff', // White background
       },
     });

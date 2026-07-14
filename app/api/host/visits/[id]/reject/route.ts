@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
@@ -51,7 +51,7 @@ export async function POST(
         visit.host.name,
         reason
       );
-    } catch (_emailError) {
+    } catch {
       console.log('SIMULATED EMAIL SENT (REJECTION):');
       console.log(`To: ${visit.visitor.email}`);
       console.log(`Subject: Visit Update - Lish AI Labs`);

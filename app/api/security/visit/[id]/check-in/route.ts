@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
@@ -63,8 +63,8 @@ export async function POST(
         `${visit.visitor.firstName} ${visit.visitor.lastName}`,
         visit.purpose
       );
-    } catch (_emailError) {
-      console.log('SIMULATED CHECK-IN NOTIFICATION EMAIL:");');
+    } catch {
+      console.log('SIMULATED CHECK-IN NOTIFICATION EMAIL:');
       console.log(`To Host Email: ${visit.host.email}`);
       console.log(`Host: ${visit.host.name}`);
       console.log(`Visitor: ${visit.visitor.firstName} ${visit.visitor.lastName}`);

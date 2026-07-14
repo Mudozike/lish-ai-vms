@@ -52,7 +52,7 @@ model Blacklist {
 // ---------- HOST (Lish AI Labs Staff/Team) ----------
 model Host {
   id            String   @id @default(cuid())
-  userId        String   @unique
+  userId String? @unique
   email         String   @unique
   name          String
   department    String   // "Executive", "Partnerships", "Training", "Operations", "HR", "Admin"
@@ -123,6 +123,7 @@ model MovementLog {
   @@index([visitId])
   @@index([timestamp])
 }
+
 
 
 

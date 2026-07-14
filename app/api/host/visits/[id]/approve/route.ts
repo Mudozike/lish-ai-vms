@@ -9,7 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
@@ -78,8 +78,9 @@ export async function POST(
         qrDataUrl,
         formattedDate
       );
-    } catch (_emailError) {
+    } catch (emailError) {
       // Gracefully fall back if Resend fails or key is missing
+      console.warn('Failed to send approval email via Resend, logging details:', emailError);
       console.log('SIMULATED EMAIL SENT:');
       console.log(`To: ${visit.visitor.email}`);
       console.log(`Subject: Visit Approved - Lish AI Labs`);

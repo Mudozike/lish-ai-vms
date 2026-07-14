@@ -50,23 +50,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto flex items-center justify-between gap-3 p-4 rounded-xl border shadow-xl transition-all duration-300 transform translate-y-0 animate-slide-in-right ${
+            className={`pointer-events-auto flex items-center justify-between gap-3 p-4 rounded-xl border shadow-lg transition-all duration-300 transform translate-y-0 animate-slide-in-right ${
               t.type === 'success'
-                ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200'
+                ? 'bg-white border-emerald-100 text-slate-800'
                 : t.type === 'error'
-                ? 'bg-red-950/90 border-red-500/30 text-red-200'
-                : 'bg-indigo-950/90 border-indigo-500/30 text-indigo-200'
+                ? 'bg-white border-red-100 text-slate-800'
+                : 'bg-white border-indigo-100 text-slate-800'
             } backdrop-blur-md`}
           >
             <div className="flex items-center gap-3">
-              {t.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />}
-              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />}
-              {t.type === 'info' && <Info className="w-5 h-5 text-indigo-400 shrink-0" />}
+              {t.type === 'success' && <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />}
+              {t.type === 'error' && <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />}
+              {t.type === 'info' && <Info className="w-5 h-5 text-indigo-500 shrink-0" />}
               <span className="text-sm font-medium">{t.message}</span>
             </div>
             <button
               onClick={() => removeToast(t.id)}
-              className="text-slate-400 hover:text-slate-200 p-0.5 rounded transition-colors"
+              className="text-slate-400 hover:text-slate-600 p-0.5 rounded transition-colors"
             >
               <X className="w-4 h-4" />
             </button>

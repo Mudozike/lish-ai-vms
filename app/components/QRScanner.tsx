@@ -8,7 +8,7 @@ interface QRScannerProps {
   onError?: (error: string) => void;
 }
 
-export function QRScanner({ onScan, onError: _onError }: QRScannerProps) {
+export function QRScanner({ onScan }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(true);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 

@@ -4,45 +4,51 @@ import prisma from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const clerkUser = await currentUser();
-    const email = clerkUser?.emailAddresses[0]?.emailAddress;
-
-    // Find user in DB
+    // Find user in DB first (fast, direct indexed query)
     let dbUser = await prisma.user.findUnique({
       where: { clerkId: userId }
     });
 
-    // Fallback: match by email for seeded users
-    if (!dbUser && email) {
-      dbUser = await prisma.user.findUnique({
-        where: { email }
-      });
-      if (dbUser) {
-        dbUser = await prisma.user.update({
-          where: { id: dbUser.id },
-          data: { clerkId: userId }
+    // Only if user is NOT in our database do we query Clerk for full user details
+    if (!dbUser) {
+      const clerkUser = await currentUser();
+      if (!clerkUser) {
+        return NextResponse.json({ success: false, message: 'User not found in Clerk' }, { status: 404 });
+      }
+      const email = clerkUser.emailAddresses[0]?.emailAddress;
+
+      // Fallback: match by email for seeded users
+      if (email) {
+        dbUser = await prisma.user.findUnique({
+          where: { email }
+        });
+        if (dbUser) {
+          dbUser = await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { clerkId: userId }
+          });
+        }
+      }
+
+      // Auto-create User fallback if still not found
+      if (!dbUser) {
+        dbUser = await prisma.user.create({
+          data: {
+            clerkId: userId,
+            email: email || `${userId}@placeholder.com`,
+            name: clerkUser.firstName 
+              ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() 
+              : 'Lish Staff Member',
+            role: email === 'admin@lishailabs.com' ? 'ADMIN' : email === 'security@lishailabs.com' ? 'SECURITY' : 'HOST',
+            department: 'Training'
+          }
         });
       }
-    }
-
-    // Auto-create User fallback
-    if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          clerkId: userId,
-          email: email || `${userId}@placeholder.com`,
-          name: clerkUser?.firstName 
-            ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() 
-            : 'Lish Staff Member',
-          role: email === 'admin@lishailabs.com' ? 'ADMIN' : email === 'security@lishailabs.com' ? 'SECURITY' : 'HOST',
-          department: 'Training'
-        }
-      });
     }
 
     // Ensure Host record exists for HOST role users

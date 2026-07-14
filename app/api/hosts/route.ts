@@ -16,7 +16,10 @@ export async function GET() {
 
     return NextResponse.json(hosts);
   } catch (error) {
-    console.error('Failed to fetch hosts:', error);
-    return NextResponse.json([]);
+    console.error('Failed to fetch hosts from database:', error);
+    return NextResponse.json(
+      { success: false, error: 'Database connection failed' },
+      { status: 500 }
+    );
   }
 }
